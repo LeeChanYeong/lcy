@@ -1,11 +1,14 @@
 package org.lcy.jdbc_raw;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import javax.sql.DataSource;
 
@@ -22,22 +25,22 @@ public class ArticleDaoImplUsingRawJdbc implements ArticleDao {
 	 * 목록 가져오는 sql
 	 */
 	static final String LIST_ARTICLES = "SELECT articleId, title, name, cdate FROM article LIMIT 20";
-	
+
 	/**
 	 * 글 1개 가져오는 sql
 	 */
 	static final String GET_ARTICLE = "SELECT articleId, title, content, name, cdate FROM article WHERE articleId=?";
-	
+
 	/**
 	 * 글 등록하는 sql
 	 */
 	static final String ADD_ARTICLE = "INSERT INTO article(title, content, userId, name) VALUES (?,?,?,?)";
-	
+
 	/**
 	 * 글 수정하는 sql
 	 */
 	static final String UPDATE_ARTICLE = "UPDATE article SET title=?, content=? WHERE articleId=?";
-	
+
 	/**
 	 * 글 삭제하는 sql
 	 */
@@ -53,8 +56,16 @@ public class ArticleDaoImplUsingRawJdbc implements ArticleDao {
 	 * dataSource를 초기화한다.
 	 */
 	public ArticleDaoImplUsingRawJdbc() {
-		ds = new MariaDbDataSource(
-				"jdbc:mariadb://localhost:3306/lcy?username=lcy&password=2012");
+		Properties props = new Properties();
+		// 클래스패스에 있는 db.properties 파일에서 프라퍼티를 읽는다.
+		try (InputStream in = getClass().getClassLoader()
+				.getResourceAsStream("db.properties")) {
+			props.load(in);
+			// db.url 프라퍼티 값으로 데이터소스 초기화
+			ds = new MariaDbDataSource(props.getProperty("db.url"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -112,14 +123,14 @@ public class ArticleDaoImplUsingRawJdbc implements ArticleDao {
 	 * 게시글 등록
 	 */
 	@Override
-	public void addArticle(Article article) throws DaoException {
+	public int addArticle(Article article) throws DaoException {
 		try (Connection con = ds.getConnection();
 				PreparedStatement ps = con.prepareStatement(ADD_ARTICLE)) {
 			ps.setString(1, article.getTitle());
 			ps.setString(2, article.getContent());
 			ps.setString(3, article.getUserId());
 			ps.setString(4, article.getName());
-			ps.executeUpdate();
+			return ps.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new DaoException(e);
@@ -130,13 +141,13 @@ public class ArticleDaoImplUsingRawJdbc implements ArticleDao {
 	 * 게시글 수정
 	 */
 	@Override
-	public void updateArticle(Article article) throws DaoException {
+	public int updateArticle(Article article) throws DaoException {
 		try (Connection con = ds.getConnection();
 				PreparedStatement ps = con.prepareStatement(UPDATE_ARTICLE)) {
 			ps.setString(1, article.getTitle());
 			ps.setString(2, article.getContent());
 			ps.setString(3, article.getArticleId());
-			ps.executeUpdate();
+			return ps.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new DaoException(e);
@@ -147,11 +158,11 @@ public class ArticleDaoImplUsingRawJdbc implements ArticleDao {
 	 * 게시글 삭제
 	 */
 	@Override
-	public void deleteArticle(String articleId) throws DaoException {
+	public int deleteArticle(String articleId) throws DaoException {
 		try (Connection con = ds.getConnection();
 				PreparedStatement ps = con.prepareStatement(DELETE_ARTICLE)) {
 			ps.setString(1, articleId);
-			ps.executeUpdate();
+			return ps.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new DaoException(e);

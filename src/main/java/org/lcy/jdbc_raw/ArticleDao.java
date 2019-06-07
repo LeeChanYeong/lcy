@@ -8,7 +8,7 @@ import java.util.List;
  * @author Jacob
  */
 public interface ArticleDao {
-	
+
 	/**
 	 * 목록
 	 */
@@ -21,16 +21,22 @@ public interface ArticleDao {
 
 	/**
 	 * 등록
+	 * 
+	 * @return 추가된 행의 갯수
 	 */
-	void addArticle(Article article);
+	int addArticle(Article article);
 
 	/**
 	 * 수정
+	 * 
+	 * @return 수정된 행의 갯수
 	 */
-	void updateArticle(Article article);
+	int updateArticle(Article article);
 
 	/**
 	 * 삭제
+	 * 
+	 * @return 삭제된 행의 갯수
 	 */
-	void deleteArticle(String articleId);
+	int deleteArticle(String articleId);
 }

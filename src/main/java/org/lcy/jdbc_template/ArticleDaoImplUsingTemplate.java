@@ -1,8 +1,11 @@
 package org.lcy.jdbc_template;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Properties;
 
 import javax.sql.DataSource;
 
@@ -45,20 +48,28 @@ public class ArticleDaoImplUsingTemplate implements ArticleDao {
 	 * 데이터베이스 DataSource
 	 */
 	DataSource dataSource;
-	
+
 	/**
 	 * JDBC helper 클래스
 	 */
 	JdbcTemplate jdbcTemplate;
 
 	/**
-	 * Default Constructor<br> 
+	 * Default Constructor<br>
 	 * dataSource와 jdbcTemplate을 초기화한다.
 	 */
 	public ArticleDaoImplUsingTemplate() {
-		dataSource = new MariaDbDataSource(
-				"jdbc:mariadb://localhost:3306/lcy?user=lcy&password=2012");
-		jdbcTemplate = new JdbcTemplate(dataSource);
+		Properties props = new Properties();
+		// 클래스패스에 있는 db.properties 파일에서 프라퍼티를 읽는다.
+		try (InputStream in = getClass().getClassLoader()
+				.getResourceAsStream("db.properties")) {
+			props.load(in);
+			// db.url 프라퍼티 값으로 데이터소스 초기화
+			dataSource = new MariaDbDataSource(props.getProperty("db.url"));
+			jdbcTemplate = new JdbcTemplate(dataSource);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
